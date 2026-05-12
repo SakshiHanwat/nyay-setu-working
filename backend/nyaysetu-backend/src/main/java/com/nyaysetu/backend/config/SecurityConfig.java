@@ -53,15 +53,25 @@ public class SecurityConfig {
                     .map(String::trim)
                     .filter(s -> !s.isEmpty())
                     .collect(java.util.stream.Collectors.toList());
-            
-            boolean hasWildcard = origins.stream().anyMatch(o -> o.contains("*"));
-            if (hasWildcard) {
-                configuration.setAllowedOriginPatterns(origins);
-                // Security: Cannot allow credentials with wildcard patterns
-                configuration.setAllowCredentials(false);
-            } else {
-                configuration.setAllowedOrigins(origins);
+
+            if (origins.isEmpty()) {
+                // SAFE DEFAULT: Allow local development origins only
+                configuration.setAllowedOrigins(java.util.Arrays.asList(
+                    "http://localhost:5173",
+                    "http://localhost:3000",
+                    "http://localhost"
+                ));
                 configuration.setAllowCredentials(true);
+            } else {
+                boolean hasWildcard = origins.stream().anyMatch(o -> o.contains("*"));
+                if (hasWildcard) {
+                    configuration.setAllowedOriginPatterns(origins);
+                    // Security: Cannot allow credentials with wildcard patterns
+                    configuration.setAllowCredentials(false);
+                } else {
+                    configuration.setAllowedOrigins(origins);
+                    configuration.setAllowCredentials(true);
+                }
             }
         } else {
             // SAFE DEFAULT: Allow local development origins only
